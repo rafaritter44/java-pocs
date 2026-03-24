@@ -12,6 +12,6 @@ class ShapeTest {
         final Shape r = new Rectangle();
         final Shape fr = new FilledRectangle();
 
-        Stream.of(s, c, sq, r, fr).map(Shape::getClass).forEach(System.out::println);
+        Stream.of(s, c, sq, r, fr).map(Shape::getClass).forEach(IO::println);
     }
 }

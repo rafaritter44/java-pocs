@@ -12,6 +12,6 @@ class FigureTest {
         final Figure r = new Rectangle();
         final Figure fr = new FilledRectangle();
 
-        Stream.of(f, c, sq, r, fr).map(Figure::getClass).forEach(System.out::println);
+        Stream.of(f, c, sq, r, fr).map(Figure::getClass).forEach(IO::println);
     }
 }
