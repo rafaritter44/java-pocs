@@ -14,6 +14,5 @@ public class Rectangle implements Shape {
     }
     public double width() {
         return width;
-
     }
 }
