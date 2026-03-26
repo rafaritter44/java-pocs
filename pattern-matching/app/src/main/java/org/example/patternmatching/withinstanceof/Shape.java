@@ -10,7 +10,7 @@ public interface Shape {
             throw new IllegalArgumentException("Unrecognized shape");
         }
     }
-    public static boolean bigEnoughRect(Shape s) {
+    public static boolean bigEnoughRect(final Shape s) {
         if (!(s instanceof final Rectangle r)) {
             // You cannot use the pattern variable r here because
             // the predicate s instanceof Rectangle is false.
@@ -18,5 +18,12 @@ public interface Shape {
         }
         // You can use r here.
         return r.length() > 5; 
+    }
+    public static boolean nonEmptyRect(final Shape s) {
+        if (s instanceof final Rectangle r && r.length() > 5) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
