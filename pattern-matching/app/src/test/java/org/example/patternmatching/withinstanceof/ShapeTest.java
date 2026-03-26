@@ -9,5 +9,6 @@ class ShapeTest {
         final Shape r = new Rectangle(10.0, 5.0);
         final Shape c = new Circle(2.0);
         Stream.of(r, c).map(Shape::getPerimeter).forEach(IO::println);
+        Stream.of(r, c).map(Shape::bigEnoughRect).forEach(IO::println);
     }
 }
