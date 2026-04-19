@@ -8,4 +8,8 @@ class WhenClauseTest {
         WhenClause.test("str");
         WhenClause.test(123);
     }
+    @Test void whenClauseWorksWithRecords() {
+        WhenClause.testSwitch(new WhenClause.R(7));
+        WhenClause.testSwitch(new WhenClause.R(3));
+    }
 }
