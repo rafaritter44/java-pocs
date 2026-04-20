@@ -8,4 +8,7 @@ class NullCaseLabelTest {
     @Test void nullCaseLabelWorks() {
         Stream.of("str", 123, null).forEach(NullCaseLabel::test);
     }
+    @Test void nullCaseLabelCanBeCombinedWithDefaultCaseLabel() {
+        Stream.of("str", 123, null).forEach(NullCaseLabel::testStringOrNull);
+    }
 }
