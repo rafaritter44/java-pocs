@@ -8,4 +8,12 @@ class NullCaseLabel {
             default       -> IO.println("Something else");
         }
     }
+    static void testStringOrNull(final Object obj) {
+        switch (obj) {
+            // error: invalid case label combination
+            // case null, String s -> IO.println("String" + s);
+            case String s      -> IO.println("String: " + s);
+            case null, default -> IO.println("null or not a string");
+        }
+    }
 }
