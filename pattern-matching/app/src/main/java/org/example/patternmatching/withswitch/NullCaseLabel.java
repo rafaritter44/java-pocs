@@ -16,4 +16,10 @@ class NullCaseLabel {
             case null, default -> IO.println("null or not a string");
         }
     }
+    static void testNullCaseLabelMissing(final String s) {
+        switch (s) {
+            case Object _ -> IO.println("This doesn't match null");
+            // No null label; NullPointerException is thrown if s is null
+        }
+    }
 }
