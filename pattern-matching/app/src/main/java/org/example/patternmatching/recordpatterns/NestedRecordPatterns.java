@@ -5,12 +5,19 @@ class NestedRecordPatterns {
     static record Point(double x, double y) {}
     static record ColoredPoint(Point p, Color c) {}
     static record ColoredRectangle(ColoredPoint upperLeft, ColoredPoint lowerRight) {}
-
     static void printXCoordOfUpperLeftPointWithPatterns(final ColoredRectangle r) {
         if (r instanceof ColoredRectangle(
             ColoredPoint(Point(var x, var y), var upperLeftColor),
                          var lowerRightCorner)) {
             IO.println("Upper-left corner: " + x);
+        }
+    }
+
+    static record Box<T>(T t) {}
+    static void nestedBox(final Box<Box<String>> b) {
+        // Box(Box(var s)) is inferred to be Box<Box<String>>(Box(var s))
+        if (b instanceof Box(Box(var s))) {
+            IO.println("String: " + s);
         }
     }
 }
