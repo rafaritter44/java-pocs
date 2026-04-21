@@ -11,4 +11,8 @@ class NestedRecordPatternsTest {
         var r = new ColoredRectangle(upperLeft, lowerRight);
         printXCoordOfUpperLeftPointWithPatterns(r);
     }
+    @Test void nestedParameterizedRecordPatternsWork() {
+        var b = new Box<>(new Box<>("str"));
+        nestedBox(b);
+    }
 }
