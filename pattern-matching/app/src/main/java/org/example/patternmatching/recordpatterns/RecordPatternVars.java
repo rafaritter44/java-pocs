@@ -14,4 +14,11 @@ class RecordPatternVars {
             IO.println("Box contains: " + s);
         }
     }
+
+    static record MyPair<T, U>(T x, U y) {}
+    static void recordInference(final MyPair<String, Integer> p) {
+        switch (p) {
+            case MyPair(final var s, final var i) -> IO.println(s + ", #" + i);
+        }
+    }
 }
