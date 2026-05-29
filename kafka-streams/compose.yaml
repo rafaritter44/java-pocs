@@ -17,3 +17,5 @@ services:
       KAFKA_NUM_PARTITIONS: 3
   streams-app:
     build: .
+    depends_on:
+      - broker
