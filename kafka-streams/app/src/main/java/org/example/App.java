@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -38,7 +39,7 @@ class App {
     }
 
     private void startStreams() {
-        IO.println("Starting streams");
+        IO.println("Starting streams...");
         var props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-application");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
@@ -59,6 +60,7 @@ class App {
     }
 
     private void produceMessages() {
+        IO.println("Starting to produce messages...");
         var props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -80,27 +82,30 @@ class App {
             sendMessage.accept("hello kafka streams");
             producer.flush();
         }
+        IO.println("Finished producing messages");
     }
 
     private void consumeMessages() {
+        IO.println("Starting to consume messages...");
         var props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "print-consumer");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
 
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+        try (KafkaConsumer<String, Long> consumer = new KafkaConsumer<>(props)) {
             consumer.subscribe(List.of(WORDS_WITH_COUNTS_TOPIC));
 
             while (true) {
                 consumer.poll(Duration.ofMillis(100))
-                        .forEach(record -> IO.println("Consumed message: " + record.value()));
+                        .forEach(record ->
+                                IO.println("Consumed message: " + record.key() + "=" + record.value()));
             }
         }
     }
 
     private void createTopics() {
-        IO.println("Creating topics");
+        IO.println("Creating topics...");
         var props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         try (var adminClient = AdminClient.create(props)) {
