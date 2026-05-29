@@ -3,7 +3,11 @@ package org.example;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
@@ -15,6 +19,7 @@ import org.apache.kafka.streams.kstream.Produced;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 class App {
     private static final String BOOTSTRAP_SERVERS = "broker:9092";
@@ -26,7 +31,7 @@ class App {
         startStreams();
     }
 
-    void startStreams() {
+    private void startStreams() {
         IO.println("Starting streams");
         var props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-application");
@@ -47,7 +52,31 @@ class App {
         IO.println("Streams started");
     }
 
-    void createTopics() {
+    private void produceMessages() {
+        var props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+            Consumer<String> sendMessage = message -> {
+                ProducerRecord<String, String> record = new ProducerRecord<>(TEXT_LINES_TOPIC, message);
+                producer.send(record, (_, e) -> {
+                    if (e == null) {
+                        IO.println("Message sent: " + message);
+                    } else {
+                        IO.println("Message not sent: " + e.getMessage());
+                    }
+                });
+            };
+            sendMessage.accept("hello world");
+            sendMessage.accept("hello kafka");
+            sendMessage.accept("hello kafka streams");
+            producer.flush();
+        }
+    }
+
+    private void createTopics() {
         IO.println("Creating topics");
         var props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
