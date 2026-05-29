@@ -3,10 +3,13 @@ package org.example;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -16,6 +19,7 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -29,6 +33,8 @@ class App {
     void main() {
         createTopics();
         startStreams();
+        produceMessages();
+        consumeMessages();
     }
 
     private void startStreams() {
@@ -63,9 +69,9 @@ class App {
                 ProducerRecord<String, String> record = new ProducerRecord<>(TEXT_LINES_TOPIC, message);
                 producer.send(record, (_, e) -> {
                     if (e == null) {
-                        IO.println("Message sent: " + message);
+                        IO.println("Produced message: " + message);
                     } else {
-                        IO.println("Message not sent: " + e.getMessage());
+                        IO.println("Failed to produce message: " + e.getMessage());
                     }
                 });
             };
@@ -73,6 +79,23 @@ class App {
             sendMessage.accept("hello kafka");
             sendMessage.accept("hello kafka streams");
             producer.flush();
+        }
+    }
+
+    private void consumeMessages() {
+        var props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "print-consumer");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            consumer.subscribe(List.of(WORDS_WITH_COUNTS_TOPIC));
+
+            while (true) {
+                consumer.poll(Duration.ofMillis(100))
+                        .forEach(record -> IO.println("Consumed message: " + record.value()));
+            }
         }
     }
 
@@ -88,7 +111,7 @@ class App {
             adminClient.createTopics(List.of(textLinesTopic, wordsWithCountsTopic)).all().get();
             IO.println("Topics created");
         } catch (Exception e) {
-            IO.println("Topics not created: " + e.getMessage());
+            IO.println("Failed to create topics: " + e.getMessage());
         }
     }
 }
