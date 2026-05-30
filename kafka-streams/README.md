@@ -91,21 +91,10 @@ app-1  | Consumed message: asia=124
 
 ## Competitors
 
-| Criterion | Kafka Streams | Spark and Flink      |
-| --------- | ------------- | -------------------- |
-|           | Java library  | Master-slave cluster |
-|           |               |                      |
-|           |               |                      |
-|           |               |                      |
-|           |               |                      |
-
-Stream and batch processing vs. Stream processing only
-
-Require an external file system like S3 or HDFS
-
-Multiple sources and sinks vs. Limited to Kafka (requires Kafka Connect for integration with other systems)
-
-Language support:
-Spark: Java, Scala, Python, R, SQL
-Flink: Java, Scala, Python, SQL
-Kafka Streams: Java, Scala
+| Criterion        | Kafka Streams     | Spark and Flink             |
+| ---------------- | ----------------- | --------------------------- |
+|                  | Java library      | Master-slave cluster        |
+|                  | Stream processing | Stream and batch processing |
+|                  |                   | Require an external file system like S3 or HDFS |
+|                  | Limited to Kafka (requires Kafka Connect for integration with other systems) | Multiple sources and sinks  |
+| Language support | Java, Scala       | Java, Scala, Python, SQL    |
