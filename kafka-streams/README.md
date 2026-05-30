@@ -26,5 +26,3 @@ Language support:
 Spark: Java, Scala, Python, R, SQL
 Flink: Java, Scala, Python, SQL
 Kafka Streams: Java, Scala
-
-https://kafka.apache.org/43/streams/introduction/
