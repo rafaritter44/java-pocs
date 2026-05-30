@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -100,7 +101,10 @@ class App {
             producer.flush();
         }
 
-        try (KafkaProducer<String, Long> producer = new KafkaProducer<>(props)) {
+        var longProps = new Properties();
+        longProps.putAll(props);
+        longProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
+        try (KafkaProducer<String, Long> producer = new KafkaProducer<>(longProps)) {
             BiConsumer<String, Long> sendMessage = (key, val) -> {
                 ProducerRecord<String, Long> record = new ProducerRecord<>(USER_CLICKS_TOPIC, key, val);
                 producer.send(record, (_, e) -> {
