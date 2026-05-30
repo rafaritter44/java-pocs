@@ -8,20 +8,15 @@
 
 ## POC
 
-
-
 ## Competitors
 
-| Criterion | Kafka Streams | Spark and Flink |
-| --------- | ------------- | --------------- |
-|           |               |                 |
-|           |               |                 |
-|           |               |                 |
-|           |               |                 |
-|           |               |                 |
-
-
-Master-slave cluster vs. Java library
+| Criterion | Kafka Streams | Spark and Flink      |
+| --------- | ------------- | -------------------- |
+|           | Java library  | Master-slave cluster |
+|           |               |                      |
+|           |               |                      |
+|           |               |                      |
+|           |               |                      |
 
 Stream and batch processing vs. Stream processing only
 
