@@ -1,5 +1,11 @@
 # Kafka Streams
 
+## What is Kafka Streams?
+
+- A Java/Scala library.
+- A stream processing engine.
+- An API for transforming data stored in Kafka topics.
+
 ## POC
 
 
