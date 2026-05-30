@@ -10,6 +10,21 @@
 
 ### Word count
 
+Code:
+```java
+var builder = new StreamsBuilder();
+
+KStream<String, String> textLines = builder.stream(TEXT_LINES_TOPIC);
+KTable<String, Long> wordCounts = textLines
+        .flatMapValues(textLine -> Arrays.asList(textLine.toLowerCase().split("\\W+")))
+        .groupBy((_, word) -> word)
+        .count(Materialized.as("counts-store"));
+wordCounts.toStream().to(WORD_COUNTS_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+
+var streams = new KafkaStreams(builder.build(), props);
+streams.start();
+```
+
 Input:
 ```
 app-1  | Produced message: hello world
@@ -27,6 +42,24 @@ app-1  | Consumed message: streams=1
 ```
 
 ### Clicks by region
+
+Code:
+```java
+var builder = new StreamsBuilder();
+
+KStream<String, Long> userClicks = builder.stream(USER_CLICKS_TOPIC, Consumed.with(Serdes.String(), Serdes.Long()));
+KTable<String, String> userRegions = builder.table(USER_REGIONS_TOPIC);
+KTable<String, Long> clicksByRegion = userClicks
+        .leftJoin(userRegions, (clicks, region) ->
+                new ClicksByRegion(region == null ? "UNKNOWN" : region, clicks))
+        .map((_, cbr) -> KeyValue.pair(cbr.region, cbr.clicks))
+        .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
+        .reduce(Long::sum);
+clicksByRegion.toStream().to(CLICKS_BY_REGION_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+
+var streams = new KafkaStreams(builder.build(), props);
+streams.start();
+```
 
 Input:
 ```
