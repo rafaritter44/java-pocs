@@ -6,7 +6,7 @@
 - A stream processing engine.
 - An API for transforming data stored in Kafka topics.
 
-## Use cases
+## Real use cases
 
 - ...
 
