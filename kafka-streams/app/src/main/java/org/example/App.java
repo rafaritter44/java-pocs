@@ -13,23 +13,29 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 class App {
+    record ClicksByRegion(String region, long clicks) {}
+
     private static final String BOOTSTRAP_SERVERS = "broker:9092";
+
     private static final String TEXT_LINES_TOPIC = "TextLinesTopic";
-    private static final String WORDS_WITH_COUNTS_TOPIC = "WordsWithCountsTopic";
+    private static final String WORD_COUNTS_TOPIC = "WordCountsTopic";
+
+    private static final String USER_CLICKS_TOPIC = "UserClicksTopic";
+    private static final String USER_REGIONS_TOPIC = "UserRegionsTopic";
+    private static final String CLICKS_BY_REGION_TOPIC = "ClicksByRegionTopic";
 
     void main() {
         createTopics();
@@ -41,18 +47,29 @@ class App {
     private void startStreams() {
         IO.println("Starting streams...");
         var props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-application");
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-app");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
         var builder = new StreamsBuilder();
+
         KStream<String, String> textLines = builder.stream(TEXT_LINES_TOPIC);
         KTable<String, Long> wordCounts = textLines
                 .flatMapValues(textLine -> Arrays.asList(textLine.toLowerCase().split("\\W+")))
                 .groupBy((_, word) -> word)
                 .count(Materialized.as("counts-store"));
-        wordCounts.toStream().to(WORDS_WITH_COUNTS_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+        wordCounts.toStream().to(WORD_COUNTS_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+
+        KStream<String, Long> userClicks = builder.stream(USER_CLICKS_TOPIC, Consumed.with(Serdes.String(), Serdes.Long()));
+        KTable<String, String> userRegions = builder.table(USER_REGIONS_TOPIC);
+        KTable<String, Long> clicksByRegion = userClicks
+                .leftJoin(userRegions, (clicks, region) ->
+                        new ClicksByRegion(region == null ? "UNKNOWN" : region, clicks))
+                .map((_, cbr) -> KeyValue.pair(cbr.region, cbr.clicks))
+                .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
+                .reduce(Long::sum);
+        clicksByRegion.toStream().to(CLICKS_BY_REGION_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
 
         var streams = new KafkaStreams(builder.build(), props);
         streams.start();
@@ -82,6 +99,50 @@ class App {
             sendMessage.accept("hello kafka streams");
             producer.flush();
         }
+
+        try (KafkaProducer<String, Long> producer = new KafkaProducer<>(props)) {
+            BiConsumer<String, Long> sendMessage = (key, val) -> {
+                ProducerRecord<String, Long> record = new ProducerRecord<>(USER_CLICKS_TOPIC, key, val);
+                producer.send(record, (_, e) -> {
+                    if (e == null) {
+                        IO.println("Produced message: " + key + "=" + val);
+                    } else {
+                        IO.println("Failed to produce message: " + e.getMessage());
+                    }
+                });
+            };
+            sendMessage.accept("alice", 13L);
+            sendMessage.accept("bob", 4L);
+            sendMessage.accept("charlie", 25L);
+            sendMessage.accept("bob", 19L);
+            sendMessage.accept("david", 56L);
+            sendMessage.accept("eve", 78L);
+            sendMessage.accept("alice", 40L);
+            sendMessage.accept("frank", 99L);
+            producer.flush();
+        }
+
+        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+            BiConsumer<String, String> sendMessage = (key, val) -> {
+                ProducerRecord<String, String> record = new ProducerRecord<>(USER_REGIONS_TOPIC, key, val);
+                producer.send(record, (_, e) -> {
+                    if (e == null) {
+                        IO.println("Produced message: " + key + "=" + val);
+                    } else {
+                        IO.println("Failed to produce message: " + e.getMessage());
+                    }
+                });
+            };
+            sendMessage.accept("alice", "asia");
+            sendMessage.accept("bob", "americas");
+            sendMessage.accept("charlie", "asia");
+            sendMessage.accept("david", "europe");
+            sendMessage.accept("alice", "europe");
+            sendMessage.accept("eve", "americas");
+            sendMessage.accept("frank", "asia");
+            producer.flush();
+        }
+
         IO.println("Finished producing messages");
     }
 
@@ -94,7 +155,7 @@ class App {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
 
         try (KafkaConsumer<String, Long> consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(List.of(WORDS_WITH_COUNTS_TOPIC));
+            consumer.subscribe(List.of(WORD_COUNTS_TOPIC, CLICKS_BY_REGION_TOPIC));
 
             while (true) {
                 consumer.poll(Duration.ofMillis(100))
@@ -111,9 +172,17 @@ class App {
         try (var adminClient = AdminClient.create(props)) {
             var numPartitions = 3;
             short replicationFactor = 1;
+
             var textLinesTopic = new NewTopic(TEXT_LINES_TOPIC, numPartitions, replicationFactor);
-            var wordsWithCountsTopic = new NewTopic(WORDS_WITH_COUNTS_TOPIC, numPartitions, replicationFactor);
-            adminClient.createTopics(List.of(textLinesTopic, wordsWithCountsTopic)).all().get();
+            var wordCountsTopic = new NewTopic(WORD_COUNTS_TOPIC, numPartitions, replicationFactor);
+
+            var userClicksTopic = new NewTopic(USER_CLICKS_TOPIC, numPartitions, replicationFactor);
+            var userRegionsTopic = new NewTopic(USER_REGIONS_TOPIC, numPartitions, replicationFactor);
+            var clicksByRegionTopic = new NewTopic(CLICKS_BY_REGION_TOPIC, numPartitions, replicationFactor);
+
+            var topics = List.of(textLinesTopic, wordCountsTopic, userClicksTopic, userRegionsTopic, clicksByRegionTopic);
+
+            adminClient.createTopics(topics).all().get();
             IO.println("Topics created");
         } catch (Exception e) {
             IO.println("Failed to create topics: " + e.getMessage());
