@@ -12,7 +12,14 @@
 
 ## Competitors
 
-Spark and Flink
+| Criterion | Kafka Streams | Spark and Flink |
+| --------- | ------------- | --------------- |
+|           |               |                 |
+|           |               |                 |
+|           |               |                 |
+|           |               |                 |
+|           |               |                 |
+
 
 Master-slave cluster vs. Java library
 
