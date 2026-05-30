@@ -112,11 +112,11 @@ class App {
                     }
                 });
             };
-            sendMessage.accept("alice", "asia");
+            sendMessage.accept("alice", "asia"); // Alice lived in Asia originally...
             sendMessage.accept("bob", "americas");
             sendMessage.accept("charlie", "asia");
             sendMessage.accept("david", "europe");
-            sendMessage.accept("alice", "europe");
+            sendMessage.accept("alice", "europe"); // ...but moved to Europe some time later.
             sendMessage.accept("eve", "americas");
             sendMessage.accept("frank", "asia");
             producer.flush();
