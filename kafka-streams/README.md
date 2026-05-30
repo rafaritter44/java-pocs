@@ -6,6 +6,10 @@
 - A stream processing engine.
 - An API for transforming data stored in Kafka topics.
 
+## Architecture
+
+![Architecture](architecture.png)
+
 ## POCs
 
 ### Word count
