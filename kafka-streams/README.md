@@ -6,14 +6,29 @@
 - A stream processing engine.
 - An API for transforming data stored in Kafka topics.
 
-## POC
+## POCs
 
+### Word count
+
+Input:
 ```
 app-1  | Produced message: hello world
 app-1  | Produced message: hello kafka
 app-1  | Produced message: hello kafka streams
 ```
 
+
+Output:
+```
+app-1  | Consumed message: hello=3
+app-1  | Consumed message: world=1
+app-1  | Consumed message: kafka=2
+app-1  | Consumed message: streams=1
+```
+
+### Clicks by region
+
+Input:
 ```
 app-1  | Produced message: alice=asia
 app-1  | Produced message: bob=americas
@@ -23,7 +38,6 @@ app-1  | Produced message: alice=europe
 app-1  | Produced message: eve=americas
 app-1  | Produced message: frank=asia
 ```
-
 ```
 app-1  | Produced message: alice=13
 app-1  | Produced message: bob=4
@@ -35,13 +49,7 @@ app-1  | Produced message: alice=40
 app-1  | Produced message: frank=99
 ```
 
-```
-app-1  | Consumed message: hello=3
-app-1  | Consumed message: world=1
-app-1  | Consumed message: kafka=2
-app-1  | Consumed message: streams=1
-```
-
+Output:
 ```
 app-1  | Consumed message: americas=101
 app-1  | Consumed message: europe=109
