@@ -101,6 +101,27 @@ class App {
             producer.flush();
         }
 
+        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+            BiConsumer<String, String> sendMessage = (key, val) -> {
+                ProducerRecord<String, String> record = new ProducerRecord<>(USER_REGIONS_TOPIC, key, val);
+                producer.send(record, (_, e) -> {
+                    if (e == null) {
+                        IO.println("Produced message: " + key + "=" + val);
+                    } else {
+                        IO.println("Failed to produce message: " + e.getMessage());
+                    }
+                });
+            };
+            sendMessage.accept("alice", "asia");
+            sendMessage.accept("bob", "americas");
+            sendMessage.accept("charlie", "asia");
+            sendMessage.accept("david", "europe");
+            sendMessage.accept("alice", "europe");
+            sendMessage.accept("eve", "americas");
+            sendMessage.accept("frank", "asia");
+            producer.flush();
+        }
+
         var longProps = new Properties();
         longProps.putAll(props);
         longProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
@@ -123,27 +144,6 @@ class App {
             sendMessage.accept("eve", 78L);
             sendMessage.accept("alice", 40L);
             sendMessage.accept("frank", 99L);
-            producer.flush();
-        }
-
-        try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-            BiConsumer<String, String> sendMessage = (key, val) -> {
-                ProducerRecord<String, String> record = new ProducerRecord<>(USER_REGIONS_TOPIC, key, val);
-                producer.send(record, (_, e) -> {
-                    if (e == null) {
-                        IO.println("Produced message: " + key + "=" + val);
-                    } else {
-                        IO.println("Failed to produce message: " + e.getMessage());
-                    }
-                });
-            };
-            sendMessage.accept("alice", "asia");
-            sendMessage.accept("bob", "americas");
-            sendMessage.accept("charlie", "asia");
-            sendMessage.accept("david", "europe");
-            sendMessage.accept("alice", "europe");
-            sendMessage.accept("eve", "americas");
-            sendMessage.accept("frank", "asia");
             producer.flush();
         }
 
