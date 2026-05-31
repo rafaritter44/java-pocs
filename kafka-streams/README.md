@@ -104,7 +104,7 @@ app-1  | Consumed message: asia=124
 | Criterion             | Kafka Streams     | Spark and Flink                         |
 | --------------------- | ----------------- | --------------------------------------- |
 | Deployment complexity | Java library      | Master-slave cluster                    |
-| Computation model     | Stream processing | Stream and batch processing             |
 | Durable storage       | Kafka topics      | An external file system like S3 or HDFS |
 | System integration    | Limited to Kafka  | Multiple sources and sinks              |
+| Computation model     | Stream processing | Stream and batch processing             |
 | Language support      | Java, Scala       | Java, Scala, Python, R, SQL             |
