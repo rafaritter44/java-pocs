@@ -8,7 +8,9 @@
 
 ## Real use cases
 
-- ...
+- Predictive budgeting of advertisements (Pinterest)
+- Monitoring and alerting
+- Analytics and business intelligence
 
 ## Architecture
 
